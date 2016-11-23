@@ -35,7 +35,8 @@ static void hour_update_proc(Layer *layer, GContext *ctx) {
     graphics_context_set_fill_color(ctx, GColorWhite);
     graphics_fill_radial(ctx, bounds, GOvalScaleModeFitCircle, bounds.size.w / 2, angle_start, angle_end);
 
-    rect = grect_centered_from_polar(grect_crop(bounds, 25), GOvalScaleModeFitCircle, angle, (GSize) {
+    GRect crop = grect_crop(bounds, PBL_IF_ROUND_ELSE(25, 15));
+    rect = grect_centered_from_polar(crop, GOvalScaleModeFitCircle, angle, (GSize) {
         .w = 25,
         .h = 25
     });
@@ -91,7 +92,7 @@ static void window_load(Window *window) {
     layer_set_update_proc(s_hour_layer, hour_update_proc);
     layer_add_child(root_layer, s_hour_layer);
 
-    s_minute_layer = layer_create(grect_crop(bounds, 30));
+    s_minute_layer = layer_create(grect_crop(bounds, PBL_IF_ROUND_ELSE(30, 20)));
     layer_set_update_proc(s_minute_layer, minute_update_proc);
     layer_add_child(root_layer, s_minute_layer);
 
