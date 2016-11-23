@@ -97,6 +97,10 @@ static void center_update_proc(Layer *layer, GContext *ctx) {
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     log_func();
     memcpy(&s_tick_time, tick_time, sizeof(struct tm));
+#ifdef DEMO
+    s_tick_time.tm_hour = 11;
+    s_tick_time.tm_min = 10;
+#endif
     layer_mark_dirty(window_get_root_layer(s_window));
 }
 
