@@ -2,6 +2,7 @@
 
 static Window *s_window;
 static Layer *s_hour_layer;
+static Layer *s_center_layer;
 
 static struct tm s_tick_time;
 static GFont s_font;
@@ -23,17 +24,17 @@ static void hour_update_proc(Layer *layer, GContext *ctx) {
     int hour = s_tick_time.tm_hour > 12 ? s_tick_time.tm_hour % 12 : s_tick_time.tm_hour;
 
     int32_t angle = TRIG_MAX_ANGLE * hour / 12;
-    GRect rect = grect_from_point(grect_center_point(&bounds), (GSize) { .w = 10, .h = 10 });
+    GRect rect = grect_from_point(grect_center_point(&bounds), (GSize) { .w = 20, .h = 20 });
     GPoint origin = gpoint_from_polar(rect, GOvalScaleModeFitCircle, angle);
     bounds = grect_from_point(origin, bounds.size);
 
-    int32_t angle_start = TRIG_MAX_ANGLE * (hour - 0.3) / 12;
-    int32_t angle_end = TRIG_MAX_ANGLE * (hour + 0.3) / 12;
+    int32_t angle_start = TRIG_MAX_ANGLE * (hour - 0.35) / 12;
+    int32_t angle_end = TRIG_MAX_ANGLE * (hour + 0.35) / 12;
 
     graphics_context_set_fill_color(ctx, GColorWhite);
     graphics_fill_radial(ctx, bounds, GOvalScaleModeFitCircle, bounds.size.w / 2, angle_start, angle_end);
 
-    rect = grect_centered_from_polar(grect_crop(bounds, 20), GOvalScaleModeFitCircle, angle, (GSize) {
+    rect = grect_centered_from_polar(grect_crop(bounds, 25), GOvalScaleModeFitCircle, angle, (GSize) {
         .w = 25,
         .h = 25
     });
@@ -42,6 +43,17 @@ static void hour_update_proc(Layer *layer, GContext *ctx) {
 
     graphics_context_set_text_color(ctx, GColorBlack);
     graphics_draw_text(ctx, buf, s_font, rect, GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+}
+
+static void center_update_proc(Layer *layer, GContext *ctx) {
+    log_func();
+    GRect bounds = layer_get_bounds(layer);
+    graphics_context_set_fill_color(ctx, GColorWhite);
+    graphics_fill_radial(ctx, bounds, GOvalScaleModeFitCircle, bounds.size.w, 0, DEG_TO_TRIGANGLE(360));
+
+    bounds = grect_from_point(grect_center_point(&bounds), (GSize) { .w = 4, .h = 4 });
+    graphics_context_set_fill_color(ctx, GColorBlack);
+    graphics_fill_radial(ctx, bounds, GOvalScaleModeFitCircle, bounds.size.w, 0, DEG_TO_TRIGANGLE(360));
 }
 
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
@@ -61,6 +73,10 @@ static void window_load(Window *window) {
     layer_set_update_proc(s_hour_layer, hour_update_proc);
     layer_add_child(root_layer, s_hour_layer);
 
+    s_center_layer = layer_create(grect_from_point(grect_center_point(&bounds), (GSize) { .w = 8, .h = 8 }));
+    layer_set_update_proc(s_center_layer, center_update_proc);
+    layer_add_child(root_layer, s_center_layer);
+
     time_t now = time(NULL);
     tick_handler(localtime(&now), MINUTE_UNIT);
     tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
@@ -70,6 +86,7 @@ static void window_unload(Window *window) {
     log_func();
     tick_timer_service_unsubscribe();
 
+    layer_destroy(s_center_layer);
     layer_destroy(s_hour_layer);
 }
 
