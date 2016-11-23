@@ -2,9 +2,15 @@
   "name": "slice",
   "author": "David Morgan",
   "version": "1.0.0",
-  "keywords": ["pebble-app"],
+  "keywords": [
+    "pebble-app"
+  ],
   "private": true,
-  "dependencies": {},
+  "dependencies": {
+    "enamel": "^1.2.5",
+    "pebble-connection-vibes": "^1.1.0",
+    "pebble-hourly-vibes": "^1.1.0"
+  },
   "pebble": {
     "displayName": "Slice",
     "uuid": "1915f27f-c4ce-405a-b4e0-6132c1cec59a",
@@ -20,7 +26,12 @@
     "watchapp": {
       "watchface": true
     },
-    "messageKeys": [],
+    "messageKeys": [
+      "COLOR_MINUTE_HAND",
+      "HOURLY_VIBE",
+      "CONNECTION_VIBE",
+      "ENABLE_HEALTH"
+    ],
     "resources": {
       "media": [
         {

@@ -1,0 +1,53 @@
+[
+    {
+        "type": "section",
+        "items": [
+            {
+                "type": "color",
+                "messageKey": "COLOR_MINUTE_HAND",
+                "label": "Minute Hand Color",
+                "defaultValue": "FFFFFF",
+                "sunlight": false,
+                "capabilities": [ "COLOR" ]
+            },
+            {
+                "type": "toggle",
+                "messageKey": "HOURLY_VIBE",
+                "label": "Vibrate on the Hour",
+                "defaultValue": true
+            },
+            {
+                "type": "radiogroup",
+                "messageKey": "CONNECTION_VIBE",
+                "label": "Bluetooth Vibrate",
+                "defaultValue": "1",
+                "options": [
+                    {
+                        "label": "On Disconnect",
+                        "value": "1"
+                    },
+                    {
+                        "label": "On Disconnect & Reconnect",
+                        "value": "2"
+                    },
+                    {
+                        "label": "Neither",
+                        "value": "0"
+                    }
+                ]
+            },
+            {
+                "type": "toggle",
+                "messageKey": "ENABLE_HEALTH",
+                "label": "Enable Health",
+                "description": "Suppresses Bluetooth and hourly vibes while sleeping",
+                "defaultValue": false,
+                "capabilities": [ "HEALTH" ]
+            }
+        ]
+    },
+    {
+        "type": "submit",
+        "defaultValue": "Save"
+    }
+]
