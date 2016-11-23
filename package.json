@@ -22,7 +22,14 @@
     },
     "messageKeys": [],
     "resources": {
-      "media": []
+      "media": [
+        {
+          "type": "font",
+          "name": "FONT_GILROY_22",
+          "file": "Gilroy.ttf",
+          "characterRegex": "[0-9]"
+        }
+      ]
     }
   }
 }
