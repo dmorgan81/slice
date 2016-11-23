@@ -2,6 +2,7 @@
   "name": "slice",
   "author": "David Morgan",
   "version": "1.0.0",
+  "license": "ISC",
   "keywords": [
     "pebble-app"
   ],
