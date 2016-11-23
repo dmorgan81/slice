@@ -1,0 +1,28 @@
+{
+  "name": "slice",
+  "author": "David Morgan",
+  "version": "1.0.0",
+  "keywords": ["pebble-app"],
+  "private": true,
+  "dependencies": {},
+  "pebble": {
+    "displayName": "Slice",
+    "uuid": "1915f27f-c4ce-405a-b4e0-6132c1cec59a",
+    "sdkVersion": "3",
+    "enableMultiJS": true,
+    "targetPlatforms": [
+      "aplite",
+      "basalt",
+      "chalk",
+      "diorite",
+      "emery"
+    ],
+    "watchapp": {
+      "watchface": true
+    },
+    "messageKeys": [],
+    "resources": {
+      "media": []
+    }
+  }
+}
