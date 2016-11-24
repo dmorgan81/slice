@@ -46,15 +46,15 @@ static void hour_update_proc(Layer *layer, GContext *ctx) {
     int32_t angle = TRIG_MAX_ANGLE * hour / 12;
     GRect rect = grect_from_point(grect_center_point(&bounds), (GSize) { .w = 20, .h = 20 });
     GPoint origin = gpoint_from_polar(rect, GOvalScaleModeFitCircle, angle);
-    bounds = grect_from_point(origin, bounds.size);
+    bounds = grect_from_point(origin, grect_crop(bounds, 10).size);
 
-    int32_t angle_start = TRIG_MAX_ANGLE * (hour - 0.4) / 12;
-    int32_t angle_end = TRIG_MAX_ANGLE * (hour + 0.4) / 12;
+    int32_t angle_start = TRIG_MAX_ANGLE * (hour - 0.45) / 12;
+    int32_t angle_end = TRIG_MAX_ANGLE * (hour + 0.45) / 12;
 
     graphics_context_set_fill_color(ctx, GColorWhite);
     graphics_fill_radial(ctx, bounds, GOvalScaleModeFitCircle, bounds.size.w / 2, angle_start, angle_end);
 
-    GRect crop = grect_crop(bounds, PBL_IF_ROUND_ELSE(25, 15));
+    GRect crop = grect_crop(bounds, PBL_IF_ROUND_ELSE(15, 10));
     rect = grect_centered_from_polar(crop, GOvalScaleModeFitCircle, angle, (GSize) {
         .w = 25,
         .h = 25
