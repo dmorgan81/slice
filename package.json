@@ -10,7 +10,8 @@
   "dependencies": {
     "enamel": "^1.2.5",
     "pebble-connection-vibes": "^1.1.0",
-    "pebble-hourly-vibes": "^1.1.0"
+    "pebble-hourly-vibes": "^1.1.0",
+    "pebble-time-machine": "^1.0.2"
   },
   "pebble": {
     "displayName": "Slice",

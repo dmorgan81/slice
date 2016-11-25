@@ -2,6 +2,9 @@
 #include <pebble-events/pebble-events.h>
 #include <pebble-connection-vibes/connection-vibes.h>
 #include <pebble-hourly-vibes/hourly-vibes.h>
+#ifdef DEMO
+#include <pebble-time-machine/pebble-time-machine.h>
+#endif
 #include "logging.h"
 #include "enamel.h"
 
@@ -125,8 +128,24 @@ static void window_load(Window *window) {
     layer_add_child(root_layer, s_center_layer);
 
     time_t now = time(NULL);
-    tick_handler(localtime(&now), MINUTE_UNIT);
+    struct tm *tick_time = localtime(&now);
+#ifndef TIME_MACHINE
+    tick_handler(tick_time, MINUTE_UNIT);
     s_tick_timer_event_handle = events_tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
+#else
+    struct tm start;
+    memcpy(&start, tick_time, sizeof(struct tm));
+    start.tm_hour = 11;
+    start.tm_min = 0;
+    tick_handler(&start, MINUTE_UNIT);
+
+    struct tm end;
+    memcpy(&end, tick_time, sizeof(struct tm));
+    end.tm_hour = 11;
+    end.tm_min = 59;
+    time_machine_init_loop(&start, &end, TIME_MACHINE_MINUTES, 300);
+    s_tick_timer_event_handle = (void *) time_machine_events_tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
+#endif
 
     settings_handler(NULL);
     s_settings_event_handle = enamel_settings_received_subscribe(settings_handler, NULL);
@@ -135,7 +154,11 @@ static void window_load(Window *window) {
 static void window_unload(Window *window) {
     log_func();
     enamel_settings_received_unsubscribe(s_settings_event_handle);
+#ifndef TIME_MACHINE
     events_tick_timer_service_unsubscribe(s_tick_timer_event_handle);
+#else
+    time_machine_events_tick_timer_service_unsubscribe((int) s_tick_timer_event_handle);
+#endif
 
     layer_destroy(s_center_layer);
     layer_destroy(s_minute_layer);
