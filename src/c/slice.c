@@ -16,6 +16,9 @@ static Layer *s_center_layer;
 static int16_t s_hour_degree;
 static int32_t s_min_angle;
 static GFont s_font;
+#ifdef PBL_COLOR
+static GColor s_min_color;
+#endif
 
 static EventHandle s_tick_timer_event_handle;
 static EventHandle s_settings_event_handle;
@@ -38,6 +41,9 @@ static void settings_handler(void *context) {
 #ifdef PBL_HEALTH
     connection_vibes_enable_health(enamel_get_ENABLE_HEALTH());
     hourly_vibes_enable_health(enamel_get_ENABLE_HEALTH());
+#endif
+#ifdef PBL_COLOR
+    s_min_color = enamel_get_COLOR_MINUTE_HAND();
 #endif
     layer_mark_dirty(window_get_root_layer(s_window));
 }
@@ -78,7 +84,7 @@ static void minute_update_proc(Layer *layer, GContext *ctx) {
     graphics_context_set_stroke_width(ctx, 6);
     graphics_draw_line(ctx, grect_center_point(&bounds), point);
 
-    graphics_context_set_stroke_color(ctx, PBL_IF_COLOR_ELSE(enamel_get_COLOR_MINUTE_HAND(), GColorWhite));
+    graphics_context_set_stroke_color(ctx, PBL_IF_COLOR_ELSE(s_min_color, GColorWhite));
     graphics_context_set_stroke_width(ctx, 4);
     graphics_draw_line(ctx, grect_center_point(&bounds), point);
 }
@@ -86,7 +92,7 @@ static void minute_update_proc(Layer *layer, GContext *ctx) {
 static void center_update_proc(Layer *layer, GContext *ctx) {
     log_func();
     GRect bounds = layer_get_bounds(layer);
-    graphics_context_set_fill_color(ctx, PBL_IF_COLOR_ELSE(enamel_get_COLOR_MINUTE_HAND(), GColorWhite));
+    graphics_context_set_fill_color(ctx, PBL_IF_COLOR_ELSE(s_min_color, GColorWhite));
     graphics_fill_radial(ctx, bounds, GOvalScaleModeFitCircle, bounds.size.w, 0, DEG_TO_TRIGANGLE(360));
 
     bounds = grect_from_point(grect_center_point(&bounds), (GSize) { .w = 5, .h = 5 });
@@ -134,7 +140,17 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
         }, NULL);
         animation_schedule(property_animation_get_animation(animation));
     }
-    s_min_angle = TRIG_MAX_ANGLE * tick_time->tm_min / 60;
+
+    uint8_t min = tick_time->tm_min;
+#ifdef DEMO
+#ifdef PBL_COLOR
+    if (min > 44) s_min_color = GColorVividCerulean;
+    else if (min > 29) s_min_color = GColorIslamicGreen;
+    else if (min > 14) s_min_color = GColorRed;
+    else s_min_color = GColorWhite;
+#endif
+#endif
+    s_min_angle = TRIG_MAX_ANGLE * min / 60;
     layer_mark_dirty(window_get_root_layer(s_window));
 }
 
