@@ -149,7 +149,7 @@ static void window_load(Window *window) {
     layer_set_update_proc(s_hour_layer, hour_update_proc);
     layer_add_child(root_layer, s_hour_layer);
 
-    s_minute_layer = layer_create(grect_crop(bounds, PBL_IF_ROUND_ELSE(30, 20)));
+    s_minute_layer = layer_create(grect_crop(bounds, PBL_IF_ROUND_ELSE(30, 25)));
     layer_set_update_proc(s_minute_layer, minute_update_proc);
     layer_add_child(root_layer, s_minute_layer);
 
