@@ -49,7 +49,7 @@ static void hour_update_proc(Layer *layer, GContext *ctx) {
     GSize size = GSize(25, 25);
 
     graphics_context_set_fill_color(ctx, GColorWhite);
-    graphics_fill_radial(ctx, grect_crop(bounds, 1), GOvalScaleModeFitCircle, bounds.size.w / 2, DEG_TO_TRIGANGLE(0), DEG_TO_TRIGANGLE(360));
+    graphics_fill_radial(ctx, grect_crop(bounds, 1), GOvalScaleModeFitCircle, bounds.size.w / 2 - 12, DEG_TO_TRIGANGLE(0), DEG_TO_TRIGANGLE(360));
 
     graphics_context_set_text_color(ctx, GColorBlack);
     for (int i = 1; i <= 12; i++) {
@@ -62,8 +62,8 @@ static void hour_update_proc(Layer *layer, GContext *ctx) {
 
     graphics_context_set_fill_color(ctx, GColorBlack);
     if (s_hour_degree > 0 && s_hour_degree < 360) {
-        graphics_fill_radial(ctx, bounds, GOvalScaleModeFitCircle, bounds.size.w / 2, DEG_TO_TRIGANGLE(0), DEG_TO_TRIGANGLE(s_hour_degree - 10));
-        graphics_fill_radial(ctx, bounds, GOvalScaleModeFitCircle, bounds.size.w / 2, DEG_TO_TRIGANGLE(s_hour_degree + 10), DEG_TO_TRIGANGLE(360));
+        graphics_fill_radial(ctx, bounds, GOvalScaleModeFitCircle, bounds.size.w / 2 - 10, DEG_TO_TRIGANGLE(0), DEG_TO_TRIGANGLE(s_hour_degree - 10));
+        graphics_fill_radial(ctx, bounds, GOvalScaleModeFitCircle, bounds.size.w / 2- 10, DEG_TO_TRIGANGLE(s_hour_degree + 10), DEG_TO_TRIGANGLE(360));
     } else {
         graphics_fill_radial(ctx, bounds, GOvalScaleModeFitCircle, bounds.size.w / 2, DEG_TO_TRIGANGLE(10), DEG_TO_TRIGANGLE(350));
     }
