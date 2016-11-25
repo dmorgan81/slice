@@ -13,7 +13,7 @@ static Layer *s_hour_layer;
 static Layer *s_minute_layer;
 static Layer *s_center_layer;
 
-static uint16_t s_hour_degree;
+static int16_t s_hour_degree;
 static int32_t s_min_angle;
 static GFont s_font;
 
@@ -48,10 +48,8 @@ static void hour_update_proc(Layer *layer, GContext *ctx) {
     GRect crop = grect_crop(bounds, PBL_IF_ROUND_ELSE(15, 10));
     GSize size = GSize(25, 25);
 
-#ifdef PBL_RECT
     graphics_context_set_fill_color(ctx, GColorWhite);
     graphics_fill_radial(ctx, grect_crop(bounds, 1), GOvalScaleModeFitCircle, bounds.size.w / 2, DEG_TO_TRIGANGLE(0), DEG_TO_TRIGANGLE(360));
-#endif
 
     graphics_context_set_text_color(ctx, GColorBlack);
     for (int i = 1; i <= 12; i++) {
@@ -96,21 +94,53 @@ static void center_update_proc(Layer *layer, GContext *ctx) {
     graphics_fill_radial(ctx, bounds, GOvalScaleModeFitCircle, bounds.size.w, 0, DEG_TO_TRIGANGLE(360));
 }
 
+static void hour_setter(void *subject, int16_t value) {
+    log_func();
+    s_hour_degree = value;
+    layer_mark_dirty(subject);
+}
+
+static int16_t hour_getter(void *subject) {
+    log_func();
+    return s_hour_degree;
+}
+
+static const PropertyAnimationImplementation animation_impl = {
+    .base = {
+        .update = (AnimationUpdateImplementation) property_animation_update_int16
+    },
+    .accessors = {
+        .setter = { .int16 = hour_setter },
+        .getter = { .int16 = hour_getter }
+    }
+};
+
+static void animation_stopped(Animation *animation, bool finished, void *context) {
+    log_func();
+    s_hour_degree %= 360;
+}
+
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     log_func();
-#ifndef DEMO
-    s_hour_degree = (tick_time->tm_hour > 12 ? tick_time->tm_hour % 12 : tick_time->tm_hour) * 30;
+    if (units_changed & HOUR_UNIT) {
+        static int16_t to;
+        uint8_t hour = tick_time->tm_hour > 12 ? tick_time->tm_hour % 12 : tick_time->tm_hour;
+        to = hour < 12 ? hour * 30 : 360;
+        PropertyAnimation *animation = property_animation_create(&animation_impl, s_hour_layer, NULL, NULL);
+        property_animation_set_from_int16(animation, &s_hour_degree);
+        property_animation_set_to_int16(animation, &to);
+        animation_set_handlers(property_animation_get_animation(animation), (AnimationHandlers) {
+            .stopped = animation_stopped
+        }, NULL);
+        animation_schedule(property_animation_get_animation(animation));
+    }
     s_min_angle = TRIG_MAX_ANGLE * tick_time->tm_min / 60;
-#else
-    s_hour_degree = 11 * 30;
-    s_min_angle = TRIG_MAX_ANGLE * 10 / 60;
-#endif
     layer_mark_dirty(window_get_root_layer(s_window));
 }
 
 static void window_load(Window *window) {
     log_func();
-    window_set_background_color(window, PBL_IF_ROUND_ELSE(GColorWhite, GColorBlack));
+    window_set_background_color(window, GColorBlack);
 
     Layer *root_layer = window_get_root_layer(window);
     GRect bounds = layer_get_bounds(root_layer);
@@ -130,20 +160,21 @@ static void window_load(Window *window) {
     time_t now = time(NULL);
     struct tm *tick_time = localtime(&now);
 #ifndef TIME_MACHINE
+    s_hour_degree = (tick_time->tm_hour > 12 ? tick_time->tm_hour % 12 : tick_time->tm_hour) * 30;
     tick_handler(tick_time, MINUTE_UNIT);
     s_tick_timer_event_handle = events_tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
 #else
     struct tm start;
     memcpy(&start, tick_time, sizeof(struct tm));
-    start.tm_hour = 11;
+    start.tm_hour = 0;
     start.tm_min = 0;
-    tick_handler(&start, MINUTE_UNIT);
+    tick_handler(&start, HOUR_UNIT);
 
     struct tm end;
     memcpy(&end, tick_time, sizeof(struct tm));
-    end.tm_hour = 11;
-    end.tm_min = 59;
-    time_machine_init_loop(&start, &end, TIME_MACHINE_MINUTES, 300);
+    end.tm_hour = 12;
+    end.tm_min = 10;
+    time_machine_init_loop(&start, &end, TIME_MACHINE_MINUTES, 50);
     s_tick_timer_event_handle = (void *) time_machine_events_tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
 #endif
 
