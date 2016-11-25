@@ -214,6 +214,9 @@ static void window_unload(Window *window) {
 
 static void init(void) {
     log_func();
+#ifdef DEMO
+    light_enable(true);
+#endif
     enamel_init();
     connection_vibes_init();
     hourly_vibes_init();
