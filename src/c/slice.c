@@ -10,7 +10,8 @@ static Layer *s_hour_layer;
 static Layer *s_minute_layer;
 static Layer *s_center_layer;
 
-static struct tm s_tick_time;
+static uint16_t s_hour_degree;
+static int32_t s_min_angle;
 static GFont s_font;
 
 static EventHandle s_tick_timer_event_handle;
@@ -41,38 +42,36 @@ static void settings_handler(void *context) {
 static void hour_update_proc(Layer *layer, GContext *ctx) {
     log_func();
     GRect bounds = layer_get_bounds(layer);
-    int hour = s_tick_time.tm_hour > 12 ? s_tick_time.tm_hour % 12 : s_tick_time.tm_hour;
-
-    int32_t angle = TRIG_MAX_ANGLE * hour / 12;
-    GRect rect = grect_from_point(grect_center_point(&bounds), (GSize) { .w = 20, .h = 20 });
-    GPoint origin = gpoint_from_polar(rect, GOvalScaleModeFitCircle, angle);
-    bounds = grect_from_point(origin, grect_crop(bounds, 10).size);
-
-    int32_t angle_start = TRIG_MAX_ANGLE * (hour - 0.45) / 12;
-    int32_t angle_end = TRIG_MAX_ANGLE * (hour + 0.45) / 12;
-
-    graphics_context_set_fill_color(ctx, GColorWhite);
-    graphics_fill_radial(ctx, bounds, GOvalScaleModeFitCircle, bounds.size.w / 2, angle_start, angle_end);
-
     GRect crop = grect_crop(bounds, PBL_IF_ROUND_ELSE(15, 10));
-    rect = grect_centered_from_polar(crop, GOvalScaleModeFitCircle, angle, (GSize) {
-        .w = 25,
-        .h = 25
-    });
-    static char buf[3];
-    snprintf(buf, sizeof(buf), "%d", hour);
+    GSize size = GSize(25, 25);
+
+#ifdef PBL_RECT
+    graphics_context_set_fill_color(ctx, GColorWhite);
+    graphics_fill_radial(ctx, grect_crop(bounds, 1), GOvalScaleModeFitCircle, bounds.size.w / 2, DEG_TO_TRIGANGLE(0), DEG_TO_TRIGANGLE(360));
+#endif
 
     graphics_context_set_text_color(ctx, GColorBlack);
-    graphics_draw_text(ctx, buf, s_font, rect, GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+    for (int i = 1; i <= 12; i++) {
+        int32_t angle = TRIG_MAX_ANGLE * i / 12;
+        GRect rect = grect_centered_from_polar(crop, GOvalScaleModeFitCircle, angle, size);
+        char buf[3];
+        snprintf(buf, sizeof(buf), "%d", i);
+        graphics_draw_text(ctx, buf, s_font, rect, GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+    }
+
+    graphics_context_set_fill_color(ctx, GColorBlack);
+    if (s_hour_degree > 0 && s_hour_degree < 360) {
+        graphics_fill_radial(ctx, bounds, GOvalScaleModeFitCircle, bounds.size.w / 2, DEG_TO_TRIGANGLE(0), DEG_TO_TRIGANGLE(s_hour_degree - 10));
+        graphics_fill_radial(ctx, bounds, GOvalScaleModeFitCircle, bounds.size.w / 2, DEG_TO_TRIGANGLE(s_hour_degree + 10), DEG_TO_TRIGANGLE(360));
+    } else {
+        graphics_fill_radial(ctx, bounds, GOvalScaleModeFitCircle, bounds.size.w / 2, DEG_TO_TRIGANGLE(10), DEG_TO_TRIGANGLE(350));
+    }
 }
 
 static void minute_update_proc(Layer *layer, GContext *ctx) {
     log_func();
     GRect bounds = layer_get_bounds(layer);
-    int min = s_tick_time.tm_min;
-
-    int32_t angle = TRIG_MAX_ANGLE * min / 60;
-    GPoint point = gpoint_from_polar(bounds, GOvalScaleModeFitCircle, angle);
+    GPoint point = gpoint_from_polar(bounds, GOvalScaleModeFitCircle, s_min_angle);
 
     graphics_context_set_stroke_color(ctx, GColorBlack);
     graphics_context_set_stroke_width(ctx, 6);
@@ -96,17 +95,19 @@ static void center_update_proc(Layer *layer, GContext *ctx) {
 
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     log_func();
-    memcpy(&s_tick_time, tick_time, sizeof(struct tm));
-#ifdef DEMO
-    s_tick_time.tm_hour = 11;
-    s_tick_time.tm_min = 10;
+#ifndef DEMO
+    s_hour_degree = (tick_time->tm_hour > 12 ? tick_time->tm_hour % 12 : tick_time->tm_hour) * 30;
+    s_min_angle = TRIG_MAX_ANGLE * tick_time->tm_min / 60;
+#else
+    s_hour_degree = 11 * 30;
+    s_min_angle = TRIG_MAX_ANGLE * 10 / 60;
 #endif
     layer_mark_dirty(window_get_root_layer(s_window));
 }
 
 static void window_load(Window *window) {
     log_func();
-    window_set_background_color(window, GColorBlack);
+    window_set_background_color(window, PBL_IF_ROUND_ELSE(GColorWhite, GColorBlack));
 
     Layer *root_layer = window_get_root_layer(window);
     GRect bounds = layer_get_bounds(root_layer);
